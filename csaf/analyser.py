@@ -38,11 +38,11 @@ class CSAFAnalyser:
         print(f"{vendor} {product} {version}")
 
     def _print(self, attribute, information):
-        print (f"{attribute:40} : {information}")
+        print(f"{attribute:40} : {information}")
 
     def _multiline(self, attribute, text_field):
         MAX_NOTE_LENGTH = 100
-        text_detail = text_field.replace('\n', ' ').replace('\r', '').replace('  ', ' ')
+        text_detail = text_field.replace("\n", " ").replace("\r", "").replace("  ", " ")
         title_line = True
         while len(text_detail) > 0:
             text_info = text_detail[:MAX_NOTE_LENGTH].lstrip()
@@ -62,30 +62,38 @@ class CSAFAnalyser:
         # Key attributes from the CSAF header
         print("Header")
         print("======\n")
-        self._print("CSAF Version", self.data['document']['csaf_version'])
-        self._print("Title", self.data['document']['title'])
-        self._print("Date", self.data['document']['tracking']['current_release_date'])
+        self._print("CSAF Version", self.data["document"]["csaf_version"])
+        self._print("Title", self.data["document"]["title"])
+        self._print("Date", self.data["document"]["tracking"]["current_release_date"])
         if "notes" in self.data["document"]:
-            for note in self.data['document']['notes']:
+            for note in self.data["document"]["notes"]:
                 # Notes can be multi-line. Split text up across multiple lines
-                self._multiline(note['title'], note['text'])
+                self._multiline(note["title"], note["text"])
         if "publisher" in self.data["document"]:
-            publisher_info = f"{self.data['document']['publisher']['name']} {self.data['document']['publisher']['namespace']}"
+            publisher_info = (
+                f"{self.data['document']['publisher']['name']} "
+                f"{self.data['document']['publisher']['namespace']}"
+            )
             self._print("Publisher", publisher_info)
         if "tracking" in self.data["document"]:
             generator_version = "UNKNOWN"
-            if "version" in self.data['document']['tracking']['generator']['engine']:
-                generator_version = self.data['document']['tracking']['generator']['engine']['version']
-            self._print("Generator",
+            if "version" in self.data["document"]["tracking"]["generator"]["engine"]:
+                generator_version = self.data["document"]["tracking"]["generator"][
+                    "engine"
+                ]["version"]
+            self._print(
+                "Generator",
                 f"{self.data['document']['tracking']['generator']['engine']['name']} "
-                f"version {generator_version}"
+                f"version {generator_version}",
             )
-            self._print("Id", self.data['document']['tracking']['id'])
+            self._print("Id", self.data["document"]["tracking"]["id"])
             if "revision_history" in self.data["document"]:
-                for revision in self.data['document']['tracking']['revision_history']:
-                    self._print("Revision", f"{revision['number']} {revision['summary']}")
-            self._print("Status", self.data['document']['tracking']['status'])
-            self._print("Version", self.data['document']['tracking']['version'])
+                for revision in self.data["document"]["tracking"]["revision_history"]:
+                    self._print(
+                        "Revision", f"{revision['number']} {revision['summary']}"
+                    )
+            self._print("Status", self.data["document"]["tracking"]["status"])
+            self._print("Version", self.data["document"]["tracking"]["version"])
 
         # Show product tree
         print("\nProduct Tree")
@@ -140,9 +148,7 @@ class CSAFAnalyser:
                         )
                     else:
                         # Just show product ID
-                        print(
-                            f"Product: {p:30} "
-                        )
+                        print(f"Product: {p:30} ")
             if "recommendation" in d:
                 fix = d["recommendation"]["category"]
                 details = d["recommendation"]["details"]
