@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Security updates are always made for the latest version.  
+Security updates are always made for the latest version.
 
 ## Reporting a Vulnerability
 

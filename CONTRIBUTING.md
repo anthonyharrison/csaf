@@ -2,11 +2,11 @@
 
 ## Code of Conduct
 
-Contributors are asked to adhere to the [Python Community Code of Conduct](https://www.python.org/psf/conduct/). 
+Contributors are asked to adhere to the [Python Community Code of Conduct](https://www.python.org/psf/conduct/).
 
 ## Development Environment
 
-Linux is the preferred operating system to use while contributing to the csaf tool. 
+Linux is the preferred operating system to use while contributing to the csaf tool.
 
 Only use a supported version of Python (this is any version of Python from version 3.7).
 
@@ -33,11 +33,11 @@ source ~/Code/venv3.9/bin/activate
 
 And when you're done with the venv, you can deactivate it using the `deactivate` command.
 
-While you're in a venv, the `python` command will point to whatever version you specified when the venv was created, and pip command will install things only in that venv so you don't have to worry about conflicts with other versions or system packages.  
+While you're in a venv, the `python` command will point to whatever version you specified when the venv was created, and pip command will install things only in that venv so you don't have to worry about conflicts with other versions or system packages.
 
 ## Getting and maintaining a local copy of the source code
 
-If you're planning to contribute, first you'll want to 
+If you're planning to contribute, first you'll want to
 [get a local copy of the source code (also known as "cloning the repository")](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository)
 
 Once you've got the copy, you can update it using
@@ -59,7 +59,7 @@ These can be installed using the following pip command:
 pip install -U -r requirements.txt
 ```
 
-The `-U` in that line above will update you to the latest versions of packages as needed, which is recommended 
+The `-U` in that line above will update you to the latest versions of packages as needed, which is recommended
 in order to have all the latest updates available. The `-r requirements.txt` specifies the file with all the requirements.
 
 ```bash
@@ -77,7 +77,7 @@ python3 -m pip install --user -e .
 ```
 
 You should then be able to type `csaf-tool --help` on the command line, and it should show the help information. If this does not
-work, then double check that you have setup the local environment correctly, have downloaded and installed the code correctly, 
+work, then double check that you have setup the local environment correctly, have downloaded and installed the code correctly,
 that you are in your virtual environment and that the latest versions of#
 any dependent components have been installed.
 
@@ -112,7 +112,7 @@ To format the code, you run `black` followed by the filename you wish to reforma
 black filename.py
 ```
 
-`black` should be run after `isort`. 
+`black` should be run after `isort`.
 
 ### Other tools
 
@@ -122,7 +122,7 @@ As well as `black` for automatically making sure code adheres to the style guide
 
 ## Style Guide
 
-Most of our "style" stuff is caught by the `black` and `flake8` linters, but we also recommend that 
+Most of our "style" stuff is caught by the `black` and `flake8` linters, but we also recommend that
 contributions use f-strings for formatted strings:
 
 ### String Formatting
@@ -146,8 +146,8 @@ Note that the string started with the `f` followed by the string. Values are alw
 
 ## Documentation
 
-The documentation is within the README.md file, which is stored in the main directory. 
+The documentation is within the README.md file, which is stored in the main directory.
 
 Any updates to the usage of the tool, particularly any updates to command line options or limitations should be described in the README.md file
 
-Note that the contents of the README.md file is included in the documentation when the tool is released to [pypi](https://pypi.org/). 
+Note that the contents of the README.md file is included in the documentation when the tool is released to [pypi](https://pypi.org/).
