@@ -25,7 +25,7 @@ setup_kwargs = dict(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT',
+        'License :: OSI Approved :: MIT License',
         "Natural Language :: English",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.7",
