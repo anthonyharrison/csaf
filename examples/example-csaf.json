@@ -1,0 +1,170 @@
+{
+   "document": {
+      "category": "csaf_vex",
+      "csaf_version": "2.0",
+      "notes": [
+         {
+            "category": "summary",
+            "text": "Auto generated CSAF document",
+            "title": "Technical summary"
+         }
+      ],
+      "publisher": {
+         "category": "vendor",
+         "name": "Organisation",
+         "namespace": "https://psirt.example.com"
+      },
+      "title": "Product backdoor identified",
+      "tracking": {
+         "current_release_date": "2022-12-09T15-58-39Z",
+         "generator": {
+            "date": "2022-12-09T15-58-39Z",
+            "engine": {
+               "name": "csaf-tool",
+               "version": "0.1.0"
+            }
+         },
+         "id": "CSAF-Document-20221209155839",
+         "initial_relese_data": "2022-12-09T15-58-39Z",
+         "revision_history": [
+            {
+               "date": "2022-12-09T15-58-39Z",
+               "number": "1",
+               "summary": "Initial version"
+            }
+         ],
+         "status": "final",
+         "version": "1"
+      }
+   },
+   "product_tree": {
+      "branches": [
+         {
+            "name": "AVendor",
+            "category": "vendor",
+            "branches": [
+               {
+                  "name": "product_1",
+                  "category": "product_name",
+                  "branches": [
+                     {
+                        "name": "1.1",
+                        "category": "product_version",
+                        "product": {
+                           "name": "AVendor product_1 1.1",
+                           "product_id": "PID_0"
+                        }
+                     },
+                     {
+                        "name": "1.2",
+                        "category": "product_version",
+                        "product": {
+                           "name": "AVendor product_1 1.2",
+                           "product_id": "PID_1"
+                        }
+                     },
+                     {
+                        "name": "2.0",
+                        "category": "product_version",
+                        "product": {
+                           "name": "AVendor product_1 2.0",
+                           "product_id": "PID_2"
+                        }
+                     }
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "AVendor1",
+            "category": "vendor",
+            "branches": [
+               {
+                  "name": "product_2",
+                  "category": "product_name",
+                  "branches": [
+                     {
+                        "name": "1",
+                        "category": "product_version",
+                        "product": {
+                           "name": "AVendor1 product_2 1",
+                           "product_id": "PID_3"
+                        }
+                     }
+                  ]
+               }
+            ]
+         },
+         {
+            "name": "AVendor",
+            "category": "vendor",
+            "branches": [
+               {
+                  "name": "product_3",
+                  "category": "product_name",
+                  "branches": [
+                     {
+                        "name": "2022H2",
+                        "category": "product_version",
+                        "product": {
+                           "name": "AVendor product_3 2022H2",
+                           "product_id": "PID_4"
+                        }
+                     }
+                  ]
+               }
+            ]
+         }
+      ]
+   },
+   "vulnerabilities": [
+      {
+         "cve": "CVE-2020-1234",
+         "note": {
+            "category": "description",
+            "title": "CVE description",
+            "text": "This is a simple description"
+         },
+         "product_status": {
+            "known_affected": [
+               "PID_0"
+            ]
+         },
+         "recommendation": {
+            "category": "vendor_fix",
+            "details": "Customers should upgrade to the latest version of the product",
+            "product_ids": [
+               {
+                  "name": "AVendor product_1 1.1",
+                  "release": "1.1",
+                  "id": "PID_0"
+               }
+            ]
+         }
+      },
+      {
+         "cve": "CVE-2020-9876",
+         "note": {
+            "category": "description",
+            "title": "CVE description",
+            "text": "This is another vulnerabilty description"
+         },
+         "product_status": {
+            "known_affected": [
+               "PID_0"
+            ]
+         },
+         "recommendation": {
+            "category": "none_available",
+            "details": "Still under investigation",
+            "product_ids": [
+               {
+                  "name": "AVendor product_1 1.1",
+                  "release": "1.1",
+                  "id": "PID_0"
+               }
+            ]
+         }
+      }
+   ]
+}
