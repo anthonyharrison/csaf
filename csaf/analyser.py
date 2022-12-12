@@ -93,7 +93,11 @@ class CSAFAnalyser:
             self._print("Version", self.data["document"]["tracking"]["version"])
         if "references" in self.data["document"]:
             for reference in self.data["document"]["references"]:
-                self._multiline(f"Reference ({reference['category']})", reference['summary'])
+                category = ""
+                if "category" in reference:
+                    if reference['category'] == "external":
+                        category = "(External)"
+                self._multiline(f"Reference {category}", reference['summary'])
                 self._print("", reference['url'])
         if "distribution" in self.data["document"]:
             distribution_info = (
