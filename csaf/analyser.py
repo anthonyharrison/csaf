@@ -92,7 +92,12 @@ class CSAFAnalyser:
                     self._multiline(f"Revision {revision['number']} {revision['date']}", revision['summary'])
             self._print("Status", self.data["document"]["tracking"]["status"])
             self._print("Version", self.data["document"]["tracking"]["version"])
-
+        if "distribution" in self.data["document"]:
+            distribution_info = (
+                f"{self.data['document']['distribution']['text']}")
+            if "tlp" in self.data['document']['distribution']:
+                distribution_info = distribution_info + f" TLP: {self.data['document']['distribution']['tlp']['label']}"
+            self._print("Distribution", distribution_info)
         # Show product tree
         print("\nProduct Tree")
         print("============\n")
