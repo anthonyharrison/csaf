@@ -38,7 +38,7 @@ class CSAFAnalyser:
         print(f"{vendor} {product} {version}")
 
     def _print(self, attribute, information):
-        print(f"{attribute:40} : {information}")
+        print(f"{attribute:40} : {information.strip()}")
 
     def _multiline(self, attribute, text_field):
         MAX_NOTE_LENGTH = 100
@@ -76,22 +76,25 @@ class CSAFAnalyser:
             )
             self._print("Publisher", publisher_info)
         if "tracking" in self.data["document"]:
-            generator_version = "UNKNOWN"
-            if "version" in self.data["document"]["tracking"]["generator"]["engine"]:
-                generator_version = self.data["document"]["tracking"]["generator"][
-                    "engine"
-                ]["version"]
-            self._print(
-                "Generator",
-                f"{self.data['document']['tracking']['generator']['engine']['name']} "
-                f"version {generator_version}",
-            )
+            if "generator" in self.data["document"]["tracking"]:
+                generator_version = "UNKNOWN"
+                if "version" in self.data["document"]["tracking"]["generator"]["engine"]:
+                    generator_version = self.data["document"]["tracking"]["generator"]["engine"]["version"]
+                self._print(
+                    "Generator",
+                    f"{self.data['document']['tracking']['generator']['engine']['name']} "
+                    f"version {generator_version}",
+                )
             self._print("Id", self.data["document"]["tracking"]["id"])
             if "revision_history" in self.data["document"]["tracking"]:
                 for revision in self.data["document"]["tracking"]["revision_history"]:
                     self._multiline(f"Revision {revision['number']} {revision['date']}", revision['summary'])
             self._print("Status", self.data["document"]["tracking"]["status"])
             self._print("Version", self.data["document"]["tracking"]["version"])
+        if "references" in self.data["document"]:
+            for reference in self.data["document"]["references"]:
+                self._multiline(f"Reference ({reference['category']})", reference['summary'])
+                self._print("", reference['url'])
         if "distribution" in self.data["document"]:
             distribution_info = (
                 f"{self.data['document']['distribution']['text']}")
