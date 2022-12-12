@@ -87,11 +87,9 @@ class CSAFAnalyser:
                 f"version {generator_version}",
             )
             self._print("Id", self.data["document"]["tracking"]["id"])
-            if "revision_history" in self.data["document"]:
+            if "revision_history" in self.data["document"]["tracking"]:
                 for revision in self.data["document"]["tracking"]["revision_history"]:
-                    self._print(
-                        "Revision", f"{revision['number']} {revision['summary']}"
-                    )
+                    self._multiline(f"Revision {revision['number']} {revision['date']}", revision['summary'])
             self._print("Status", self.data["document"]["tracking"]["status"])
             self._print("Version", self.data["document"]["tracking"]["version"])
 
