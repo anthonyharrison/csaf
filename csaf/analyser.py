@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import json
+import textwrap
 from pathlib import Path
 
 
@@ -61,21 +62,20 @@ class CSAFAnalyser:
         line = "="*len(title)
         print(f"{title}\n{line}\n")
 
-    def _print(self, attribute, information):
-        print(f"{attribute:40} : {information.strip()}")
+    def _print(self, attribute, information, separator = True):
+        sep = ":" if separator else " "
+        print(f"{attribute:40} {sep} {information.strip()}")
 
     def _multiline(self, attribute, text_field):
         MAX_NOTE_LENGTH = 100
-        text_detail = text_field.replace("\n", " ").replace("\r", "").replace("  ", " ")
         title_line = True
-        while len(text_detail) > 0:
-            text_info = text_detail[:MAX_NOTE_LENGTH].lstrip()
+        output_lines = textwrap.wrap(text_field, width=MAX_NOTE_LENGTH)
+        for output in output_lines:
             if title_line:
-                self._print(attribute, text_info)
+                self._print(attribute, output)
                 title_line = False
             else:
-                self._print(" ", text_info)
-            text_detail = text_detail[MAX_NOTE_LENGTH:]
+                self._print(" ", output, separator=False)
 
     def _show_product(self, product_entry):
         if product_entry['product'] is not None and product_entry['vendor'] is not None and product_entry['version'] is not None:
