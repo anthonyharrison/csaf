@@ -20,6 +20,7 @@ class CSAFAnalyser:
         if invalid_file:
             raise FileNotFoundError
         self.data = json.load(open(self.filename))
+        self.product_list = {}
 
     def validate(self):
         # Does this document look like a CSAF document?
@@ -31,11 +32,34 @@ class CSAFAnalyser:
             return True
         return False
 
-    def _show_product(self, item):
-        vendor = item["vendor"]
-        product = item["product_name"]
-        version = item["product_version"]
-        print(f"{vendor} {product} {version}")
+    def _process_branch_element(self, branch_element, element):
+        category = branch_element.get("category", None)
+        name = branch_element.get("name", None)
+        if category is not None:
+            element[category] = name
+        return element
+
+    def _process_branch(self, branch_element, element):
+        element = self._process_branch_element(branch_element, element)
+        if "branches" in branch_element:
+            for branch in branch_element["branches"]:
+                element = self._process_branch(branch, element)
+                if "product" in branch:
+                    element["product_id"] = branch["product"]["product_id"]
+                    item = {}
+                    item["vendor"] = element.get("vendor", None)
+                    item["product"] = element.get("product_name", None)
+                    item["version"] = element.get("product_version", None)
+                    if item["version"] is None:
+                        item["version"] = element.get("product_version_range", None)
+                    id = element.get("product_id", None)
+                    if id is not None and id not in self.product_list:
+                        self.product_list[id] = item
+        return element
+
+    def _heading(self, title):
+        line = "="*len(title)
+        print(f"{title}\n{line}\n")
 
     def _print(self, attribute, information):
         print(f"{attribute:40} : {information.strip()}")
@@ -53,15 +77,20 @@ class CSAFAnalyser:
                 self._print(" ", text_info)
             text_detail = text_detail[MAX_NOTE_LENGTH:]
 
+    def _show_product(self, product_entry):
+        if product_entry['product'] is not None and product_entry['vendor'] is not None and product_entry['version'] is not None:
+            print(
+                f"{product_entry['product']:30} {product_entry['vendor']:30} {product_entry['version']}"
+            )
+
     def analyse(self):
-        # Aabort analysis if not a valid CSAF document
+        # Abort analysis if not a valid CSAF document
         if not self.validate():
             print(f"[ERROR] {self.filename} is not a valid CSAF document")
             return
 
         # Key attributes from the CSAF header
-        print("Header")
-        print("======\n")
+        self._heading("Header")
         self._print("CSAF Version", self.data["document"]["csaf_version"])
         self._print("Title", self.data["document"]["title"])
         self._print("Date", self.data["document"]["tracking"]["current_release_date"])
@@ -106,42 +135,17 @@ class CSAFAnalyser:
                 distribution_info = distribution_info + f" TLP: {self.data['document']['distribution']['tlp']['label']}"
             self._print("Distribution", distribution_info)
         # Show product tree
-        print("\nProduct Tree")
-        print("============\n")
-        product_list = {}
+        self._heading("Product Tree")
         for d in self.data["product_tree"]["branches"]:
-            vendor = d["name"]
-            for b in d["branches"]:
-                for p in b:
-                    product = b["name"]
-                    if "branches" in b:
-                        for q in b["branches"]:
-                            version = q["name"]
-                            item = {}
-                            item["vendor"] = vendor
-                            item["product"] = product
-                            item["version"] = version
-                            if "branches" in q:
-                                # Service pack
-                                for s in q["branches"]:
-                                    id = s["product"]["product_id"]
-                                    if id not in product_list:
-                                        product_list[id] = item
-                            else:
-                                id = q["product"]["product_id"]
-                                if id not in product_list:
-                                    product_list[id] = item
+            element = {}
+            element = self._process_branch(d, element)
 
         print("Product                        Vendor                         Release")
         print("-" * 90)
-        for entry in product_list:
-            product = product_list[entry]
-            print(
-                f"{product['product']:30} {product['vendor']:30} {product['version']}"
-            )
+        for entry in self.product_list:
+            self._show_product(self.product_list[entry])
 
-        print("\nVulnerabilities")
-        print("===============")
+        self._heading("Vulnerabilities")
         for d in self.data["vulnerabilities"]:
             if "note" in d:
                 print(f"\n{d['cve']} {d['note']['text']}")
@@ -149,13 +153,8 @@ class CSAFAnalyser:
                 print(f"\n{d['cve']}")
             if "product_status" in d and "known_affected" in d["product_status"]:
                 for p in d["product_status"]["known_affected"]:
-                    if p in product_list:
-                        x = product_list[p]
-                        print(
-                            f"Product: {x['product']:30} "
-                            f"Vendor: {x['vendor']:30} "
-                            f"Version: {x['version']}"
-                        )
+                    if p in self.product_list:
+                        self._show_product(self.product_list[p])
                     else:
                         # Just show product ID
                         print(f"Product: {p:30} ")
@@ -165,13 +164,8 @@ class CSAFAnalyser:
                 self._multiline(fix, details)
                 if "product_ids" in d:
                     for p in d["recommendation"]["product_ids"]:
-                        if p in product_list:
-                            x = product_list[p]
-                            print(
-                                f"Product: {x['product']:30} "
-                                f"Vendor: {x['vendor']:30} "
-                                f"Version: {x['version']}"
-                            )
+                        if p in self.product_list:
+                            self._show_product(self.product_list[p])
                         else:
                             print(f"Product Id: {p}")
             if "remediations" in d:
@@ -181,19 +175,13 @@ class CSAFAnalyser:
                     self._multiline(fix, details)
                     if "product_ids" in remediation:
                         for p in remediation["product_ids"]:
-                            if p in product_list:
-                                x = product_list[p]
-                                print(
-                                    f"Product: {x['product']:30} "
-                                    f"Vendor: {x['vendor']:30} "
-                                    f"Version: {x['version']}"
-                                )
+                            if p in self.product_list:
+                                self._show_product(self.product_list[p])
                             else:
                                 print(f"Product Id: {p}")
-
 
 if __name__ == "__main__":
     csaf_filename = "test_csaf.json"
     csaf = CSAFAnalyser(csaf_filename)
-    print(f"Is {csaf_filename} a valid CSAF document : {csaf.validate()}")
+    print(f"{csaf_filename} a valid CSAF document : {csaf.validate()}")
     csaf.analyse()
