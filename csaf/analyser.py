@@ -7,6 +7,8 @@ from pathlib import Path
 
 
 class CSAFAnalyser:
+
+    TAB = "\t\t"
     def __init__(self, filename):
         self.filename = filename
         # Check file exists
@@ -53,14 +55,16 @@ class CSAFAnalyser:
                     item["version"] = element.get("product_version", None)
                     if item["version"] is None:
                         item["version"] = element.get("product_version_range", None)
+                    item["family"] = element.get("product_family", None)
                     id = element.get("product_id", None)
                     if id is not None and id not in self.product_list:
                         self.product_list[id] = item
         return element
 
-    def _heading(self, title):
-        line = "="*len(title)
-        print(f"{title}\n{line}\n")
+    def _heading(self, title, level = 1):
+        line_char = "=" if level == 1 else "-"
+        line = line_char*len(title)
+        print(f"\n{title}\n{line}\n")
 
     def _print(self, attribute, information, separator = True):
         sep = ":" if separator else " "
@@ -77,11 +81,30 @@ class CSAFAnalyser:
             else:
                 self._print(" ", output, separator=False)
 
-    def _show_product(self, product_entry):
+    def _show_product(self, product_entry, vendor = True, tab = False):
+        tab = self.TAB if tab else ""
         if product_entry['product'] is not None and product_entry['vendor'] is not None and product_entry['version'] is not None:
-            print(
-                f"{product_entry['product']:30} {product_entry['vendor']:30} {product_entry['version']}"
-            )
+            if vendor:
+                print(
+                    f"{tab}{product_entry['product']:30} {product_entry['vendor']:30} {product_entry['version']}"
+                )
+            else:
+                print(
+                    f"{tab}{product_entry['product']:30} {product_entry['version']}"
+                )
+    def _show_product_list(self, product_list):
+        if len(product_list) > 0:
+            print("\nProduct                        Vendor                         Release")
+            print("-" * 90)
+            for entry in product_list:
+                self._show_product(product_list[entry])
+
+    def _show_product_id(self, product_ids):
+        if len(product_ids) > 0:
+            print(f"\n{self.TAB}Product                        Release")
+            print(f"{self.TAB}{'-' * 60}")
+            for entry in product_ids:
+                self._show_product(self.product_list[entry], vendor=False, tab=True)
 
     def analyse(self):
         # Abort analysis if not a valid CSAF document
@@ -127,58 +150,68 @@ class CSAFAnalyser:
                     if reference['category'] == "external":
                         category = "(External)"
                 self._multiline(f"Reference {category}", reference['summary'])
-                self._print("", reference['url'])
+                self._print("", reference['url'], separator=False)
         if "distribution" in self.data["document"]:
-            distribution_info = (
-                f"{self.data['document']['distribution']['text']}")
+            distribution_info = ""
+            if "text" in self.data['document']['distribution']:
+                distribution_info = (
+                    f"{self.data['document']['distribution']['text']}")
             if "tlp" in self.data['document']['distribution']:
                 distribution_info = distribution_info + f" TLP: {self.data['document']['distribution']['tlp']['label']}"
             self._print("Distribution", distribution_info)
+        #
         # Show product tree
+        #
         self._heading("Product Tree")
         for d in self.data["product_tree"]["branches"]:
             element = {}
             element = self._process_branch(d, element)
 
-        print("Product                        Vendor                         Release")
-        print("-" * 90)
-        for entry in self.product_list:
-            self._show_product(self.product_list[entry])
-
+        self._show_product_list(self.product_list)
+        #
+        # Show vulnerabilities
+        #
         self._heading("Vulnerabilities")
         for d in self.data["vulnerabilities"]:
-            if "note" in d:
-                print(f"\n{d['cve']} {d['note']['text']}")
-            else:
-                print(f"\n{d['cve']}")
-            if "product_status" in d and "known_affected" in d["product_status"]:
-                for p in d["product_status"]["known_affected"]:
-                    if p in self.product_list:
-                        self._show_product(self.product_list[p])
-                    else:
-                        # Just show product ID
-                        print(f"Product: {p:30} ")
-            if "recommendation" in d:
-                fix = d["recommendation"]["category"]
-                details = d["recommendation"]["details"]
-                self._multiline(fix, details)
-                if "product_ids" in d:
-                    for p in d["recommendation"]["product_ids"]:
-                        if p in self.product_list:
-                            self._show_product(self.product_list[p])
-                        else:
-                            print(f"Product Id: {p}")
+            print ("\n")
+            if "title" in d:
+                self._print("Title", d['title'] )
+            self._print("CVE ID", d['cve'])
+            if "notes" in d:
+                for note in d['notes']:
+                    self._multiline(note['title'], note['text'])
+            if "discovery_date" in d:
+                self._print("Discovery Date", d['discovery_date'] )
+            if "ids" in d:
+                for id in d['ids']:
+                    self._print (id['system_name'], id['text'])
+            if "product_status" in d:
+                for product_status in d["product_status"]:
+                    self._print(product_status.upper(),"")
+                    self._show_product_id(d["product_status"][product_status])
+            if "references" in d:
+                for reference in d["references"]:
+                    category = ""
+                    if "category" in reference:
+                        if reference['category'] == "external":
+                            category = "(External)"
+                    self._multiline(f"Reference {category}", reference['summary'])
+                    self._print("", reference['url'], separator=False)
+            if "release_date" in d:
+                self._print("Release Date", d['release_date'] )
             if "remediations" in d:
+                self._heading("Remediations", level=2)
                 for remediation in d["remediations"]:
-                    fix = remediation["category"]
+                    fix = remediation["category"].upper()
                     details = remediation["details"]
                     self._multiline(fix, details)
                     if "product_ids" in remediation:
-                        for p in remediation["product_ids"]:
-                            if p in self.product_list:
-                                self._show_product(self.product_list[p])
-                            else:
-                                print(f"Product Id: {p}")
+                        self._show_product_id(remediation["product_ids"])
+                        print ("\n")
+            if "threats" in d:
+                for threat in d["threats"]:
+                    self._print(threat['category'], threat['details'])
+            print (f"\n{'#' * 140}")
 
 if __name__ == "__main__":
     csaf_filename = "test_csaf.json"
