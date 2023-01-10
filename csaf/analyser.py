@@ -6,10 +6,15 @@ import textwrap
 from pathlib import Path
 from packageurl import PackageURL
 
+from rich import print
+from rich.panel import Panel
+from rich.console import Console
+from rich.table import Table
+from rich.columns import Columns
+
 
 class CSAFAnalyser:
 
-    TAB = "\t\t"
     def __init__(self, filename):
         self.filename = filename
         # Check file exists
@@ -77,14 +82,25 @@ class CSAFAnalyser:
                     #element = {}
         return element
 
-    def _heading(self, title, level = 1):
-        line_char = "=" if level == 1 else "-"
-        line = line_char*len(title)
-        print(f"\n{title}\n{line}\n")
+    def _heading(self, title, level = 1, rich = False):
+        if level == 1:
+            print(Panel(title.upper(), style="bold"))
+        else:
+            line_char = "-"
+            line = line_char*len(title)
+            print(f"\n{title}\n{line}\n")
+        self.rich = rich
+        if self.rich:
+            self.table=Table()
+            self.table.add_column("Item")
+            self.table.add_column("Details")
 
     def _print(self, attribute, information, separator = True):
         sep = ":" if separator else " "
-        print(f"{attribute:40} {sep} {information.strip()}")
+        if not self.rich:
+            print(f"{attribute:40} {sep} {information.strip()}")
+        else:
+            self.table.add_row(attribute, information.strip())
 
     def _multiline(self, attribute, text_field):
         MAX_NOTE_LENGTH = 100
@@ -97,53 +113,42 @@ class CSAFAnalyser:
             else:
                 self._print(" ", output, separator=False)
 
-    def _show_product(self, product_entry, vendor = True, tab = False):
-        tab = self.TAB if tab else ""
-        family = product_entry.get('family', " ")
-        version = product_entry.get('version', "Not defined")
-        try:
-            if vendor and product_entry['vendor'] is not None:
-                print(
-                    f"{tab}{family:30} {product_entry['product']:30} {product_entry['vendor']:30} {version}"
-                )
-            else:
-                print(
-                    f"{tab}{product_entry['product']:30} {version}"
-                )
-        except:
-            print (f"Error showing product {product_entry}")
     def _show_product_list(self, product_list):
         if len(product_list) > 0:
-            print("\nFamily                         Product                        Vendor                         Release")
-            print("-" * 120)
+            table = Table()
+            table.add_column("Family")
+            table.add_column("Product")
+            table.add_column("Vendor")
+            table.add_column("Release")
             shown = []
             for entry in product_list:
                 product_entry = product_list[entry]
                 if product_entry not in shown:
-                    self._show_product(product_entry)
+                    table.add_row(product_entry['family'],product_entry['product'],product_entry['vendor'],product_entry['version'])
                     shown.append(product_entry)
+            self.console.print(table)
 
     def _show_product_id(self, product_ids):
         if len(product_ids) > 0:
-            print(f"\n{self.TAB}Product                        Release")
-            print(f"{self.TAB}{'-' * 60}")
+            table = Table()
+            table.add_column("Product")
+            table.add_column("Release")
             shown = []
             for entry in product_ids:
-                try:
-                    product_entry = self.product_list[entry]
-                    if product_entry not in shown:
-                        self._show_product(product_entry, vendor=False, tab=True)
-                        shown.append(product_entry)
-                except KeyError:
-                    print (f"[ERROR] {entry} not found")
+                product_entry = self.product_list[entry]
+                if product_entry not in shown:
+                    table.add_row(product_entry['product'],product_entry['version'])
+                    shown.append(product_entry)
+            self.console.print(table)
 
     def analyse(self):
         # Abort analysis if not a valid CSAF document
         if not self.validate():
             print(f"[ERROR] {self.filename} is not a valid CSAF document")
             return
+        self.console = Console()
         # Key attributes from the CSAF header
-        self._heading("Header")
+        self._heading("CSAF Header", rich=True)
         self._print("CSAF Version", self.data["document"]["csaf_version"])
         self._print("Title", self.data["document"]["title"])
         self._print("Category", self.data["document"]["category"])
@@ -192,6 +197,8 @@ class CSAFAnalyser:
             if "tlp" in self.data['document']['distribution']:
                 distribution_info = distribution_info + f" TLP: {self.data['document']['distribution']['tlp']['label']}"
             self._print("Distribution", distribution_info)
+
+        self.console.print(self.table)
         #
         # Show product tree
         #
@@ -219,7 +226,7 @@ class CSAFAnalyser:
         #
         self._heading("Vulnerabilities")
         for d in self.data["vulnerabilities"]:
-            print ("\n")
+            self._heading("Vulnerability " + d['cve'], rich=True)
             if "title" in d:
                 self._print("Title", d['title'] )
             self._print("CVE ID", d['cve'])
@@ -248,6 +255,9 @@ class CSAFAnalyser:
                     self._print("", reference['url'], separator=False)
             if "release_date" in d:
                 self._print("Release Date", d['release_date'] )
+            if "threats" in d:
+                for threat in d["threats"]:
+                    self._print(threat['category'], threat['details'])
             if "scores" in d:
                 for score in d["scores"]:
                     if "cvss_v3" in score:
@@ -256,15 +266,16 @@ class CSAFAnalyser:
                     elif "cvss_v2" in score:
                         self._print("CVSS2 Score", str(score["cvss_v2"]["baseScore"]) + " (" + score["cvss_v2"]["baseSeverity"] + ")")
                         self._print("CVSS22 Vector", score["cvss_v2"]["vectorString"])
+            self.console.print(self.table)
+            self.rich = False
+            if "scores" in d:
+                for score in d["scores"]:
                     if "products" in score:
+                        self._heading("PRODUCTS", level=2)
                         self._show_product_id(score["products"])
-                        print("\n")
-            if "threats" in d:
-                for threat in d["threats"]:
-                    self._print(threat['category'], threat['details'])
             if "product_status" in d:
                 for product_status in d["product_status"]:
-                    self._print(product_status.upper(),"")
+                    self._heading(product_status.upper(), level=2)
                     self._show_product_id(d["product_status"][product_status])
             if "remediations" in d:
                 self._heading("Remediations", level=2)
@@ -274,8 +285,6 @@ class CSAFAnalyser:
                     self._multiline(fix, details)
                     if "product_ids" in remediation:
                         self._show_product_id(remediation["product_ids"])
-                        print ("\n")
-            print (f"\n{'#' * 140}")
 
 if __name__ == "__main__":
     csaf_filename = "test_csaf.json"
