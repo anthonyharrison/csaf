@@ -287,7 +287,7 @@ csaf_gen.generate_csaf()
 csaf_gen.publish_csaf("test_csaf.json")
 ```
 
-### CSAF Analyse using the csaf library
+### CSAF Analysis using the csaf library
 
 The following code sample can be used to analyse a CSAF file. It can be used to confirm that the CSAF file conforms with the CSAF specification
 
