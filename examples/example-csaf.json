@@ -120,51 +120,51 @@
    "vulnerabilities": [
       {
          "cve": "CVE-2020-1234",
-         "note": {
+         "notes": [
+            {
             "category": "description",
             "title": "CVE description",
             "text": "This is a simple description"
-         },
+            }
+         ],
          "product_status": {
             "known_affected": [
                "PID_0"
             ]
          },
-         "recommendation": {
-            "category": "vendor_fix",
-            "details": "Customers should upgrade to the latest version of the product",
-            "product_ids": [
-               {
-                  "name": "AVendor product_1 1.1",
-                  "release": "1.1",
-                  "id": "PID_0"
-               }
-            ]
-         }
+         "remediations": [
+            {
+               "category": "vendor_fix",
+               "details": "Customers should upgrade to the latest version of the product",
+               "product_ids": [
+                  "PID_0"
+               ]
+            }
+         ]
       },
       {
          "cve": "CVE-2020-9876",
-         "note": {
-            "category": "description",
-            "title": "CVE description",
-            "text": "This is another vulnerabilty description"
-         },
+         "notes": [
+            {
+               "category": "description",
+               "title": "CVE description",
+               "text": "This is another vulnerabilty description"
+            }
+         ],
          "product_status": {
             "known_affected": [
                "PID_0"
             ]
          },
-         "recommendation": {
-            "category": "none_available",
-            "details": "Still under investigation",
-            "product_ids": [
-               {
-                  "name": "AVendor product_1 1.1",
-                  "release": "1.1",
-                  "id": "PID_0"
-               }
-            ]
-         }
+         "remediations": [
+            {
+               "category": "none_available",
+               "details": "Still under investigation",
+               "product_ids": [
+                  "PID_0"
+               ]
+            }
+         ]
       }
    ]
 }
