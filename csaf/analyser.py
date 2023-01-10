@@ -4,6 +4,7 @@
 import json
 import textwrap
 from pathlib import Path
+from packageurl import PackageURL
 
 
 class CSAFAnalyser:
@@ -55,15 +56,14 @@ class CSAFAnalyser:
                             cpe_info = pid["cpe"]
                             cpe_items = cpe_info.split(":")
                             if cpe_items[1] == "/a":
-                                # Format is cpe:/a:redhat:rhel_eus:8.2::realtime
-                                # element["vendor"] = cpe_items[2]
-                                #element["product_name"] = cpe_items[3]
+                                # Example is cpe:/a:redhat:rhel_eus:8.2::realtime
                                 element["product_version"] = cpe_items[4]
                             elif cpe_items[1] == "2.3":
-                                # Format is cpe:2.3:a:redhat:rhel_eus:8.2::realtime
-                                # element["vendor"] = cpe_items[3]
-                                # element["product_name"] = cpe_items[4]
+                                # Example is cpe:2.3:a:redhat:rhel_eus:8.2::realtime
                                 element["product_version"] = cpe_items[5]
+                        elif "purl" in pid:
+                            purl_info = PackageURL.from_string(pid["purl"])
+                            element["product_version"] = purl_info.to_dict()['version']
                     item = {}
                     item["vendor"] = element.get("vendor", None)
                     item["product"] = element.get("product_name", "Not defined")
