@@ -78,7 +78,7 @@ python3 -m pip install --user -e .
 
 You should then be able to type `csaf-tool --help` on the command line, and it should show the help information. If this does not
 work, then double check that you have setup the local environment correctly, have downloaded and installed the code correctly,
-that you are in your virtual environment and that the latest versions of#
+that you are in your virtual environment and that the latest versions of
 any dependent components have been installed.
 
 ## Running linters
@@ -88,7 +88,7 @@ The following tools can be used to improve code quality and readability:
 - `isort` sorts imports alphabetically and by type
 - `black` provides automatic style formatting.  This will give you basic [PEP8](https://www.python.org/dev/peps/pep-0008/) compliance. (PEP8 is where the default python style guide is defined.)
 - `flake8` provides additional code "linting" for more complex errors like unused imports.
-- `pyupgrade` helps us be forward compatible with new versions of python.
+- `pyupgrade` helps to be forward compatible with new versions of python.
 
 ### Running isort by itself
 
