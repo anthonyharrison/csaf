@@ -76,6 +76,7 @@ class CSAFAnalyser:
                     item["family"] = element.get("product_family", "")
                     id = element.get("product_id", None)
                     if id is not None and id not in self.product_list:
+                        item["id"] = id
                         self.product_list[id] = item
                     # element = {}
         return element
@@ -114,6 +115,7 @@ class CSAFAnalyser:
     def _show_product_list(self, product_list):
         if len(product_list) > 0:
             table = Table()
+            table.add_column("Id")
             table.add_column("Family")
             table.add_column("Product")
             table.add_column("Vendor")
@@ -123,6 +125,7 @@ class CSAFAnalyser:
                 product_entry = product_list[entry]
                 if product_entry not in shown:
                     table.add_row(
+                        product_entry["id"],
                         product_entry["family"],
                         product_entry["product"],
                         product_entry["vendor"],
@@ -168,6 +171,8 @@ class CSAFAnalyser:
                 f"{self.data['document']['publisher']['namespace']}"
             )
             self._print("Publisher", publisher_info)
+            if "contact_details" in self.data['document']['publisher']:
+                self._print("Contact Details", self.data['document']['publisher']['contact_details'])
         if "tracking" in self.data["document"]:
             if "generator" in self.data["document"]["tracking"]:
                 generator_version = "UNKNOWN"
@@ -251,7 +256,11 @@ class CSAFAnalyser:
             if "discovery_date" in d:
                 self._print("Discovery Date", d["discovery_date"])
             if "flags" in d:
-                self._print("Exploitation", d["flags"]["label"])
+                for flag in d["flags"]:
+                    if "label" in flag:
+                        self._print("Exploitation", flag["label"])
+                    for product in flag["product_ids"]:
+                        self._print("Product", product)
             if "ids" in d:
                 for id in d["ids"]:
                     self._print(id["system_name"], id["text"])
