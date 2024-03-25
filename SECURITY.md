@@ -2,8 +2,10 @@
 
 ## Supported Versions
 
-Security updates are always made for the latest version.
+Security updates are always made for the latest version of this component.
 
 ## Reporting a Vulnerability
 
-If you discover a security issue with this tool or someone else's code, please disclose it responsibly to the appropriate party.
+Security issues with this component should be reported to the maintainer.
+
+If in the course of using this tool you discover a security issue with someone else's code, please disclose responsibly to the appropriate party.
