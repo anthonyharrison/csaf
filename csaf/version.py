@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Anthony Harrison
+# Copyright (C) 2024 Anthony Harrison
 # SPDX-License-Identifier: MIT
 
-VERSION: str = "0.2.1"
+VERSION: str = "0.3.0"
