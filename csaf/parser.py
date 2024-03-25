@@ -44,9 +44,7 @@ class CSAFParser:
         if "notes" in document:
             notes = []
             for note in document["notes"]:
-                note_ref = {'title': note["title"], 'text' : note['text']}
-                # Notes can be multi-line. Split text up across multiple lines
-                #self._multiline(note["title"], note["text"])
+                note_ref = {'title': note["title"], 'text' : note['text'], 'category': note['category']}
                 notes.append(note_ref)
             self.metadata["notes"] = notes
         if "publisher" in document:
@@ -55,6 +53,8 @@ class CSAFParser:
                 f"{self.data['document']['publisher']['namespace']}"
             )
             self.metadata["publisher"] = publisher_info
+            self.metadata["author"] = self.data['document']['publisher']['name']
+            self.metadata["author_url"] = self.data['document']['publisher']['namespace']
             if "contact_details" in self.data['document']['publisher']:
                 self.metadata["contact_details"] = self.data['document']['publisher']['contact_details']
         if "tracking" in document:
@@ -69,24 +69,19 @@ class CSAFParser:
                     ]["version"]
                 self.metadata["generator"] = f"{self.data['document']['tracking']['generator']['engine']['name']} version {generator_version}"
             self.metadata["id"] = document["tracking"]["id"]
+            self.metadata["initial_release_date"] = document["tracking"]["initial_release_date"]
             if "revision_history" in document["tracking"]:
                 revision_data=[]
                 for revision in document["tracking"]["revision_history"]:
                     revision_ref={'date' : revision["date"], 'number' : revision["number"], 'summary' : revision["summary"]}
-                    # self._multiline(
-                    #     f"Revision {revision['number']} {revision['date']}",
-                    #     revision["summary"],
-                    # )
                     revision_data.append(revision_ref)
                 self.metadata["revision"] = revision_data
             self.metadata["tracking_status"] = document["tracking"]["status"]
             self.metadata["tracking_version"] = document["tracking"]["version"]
         if "references" in document:
             for reference in document["references"]:
-                category = ""
                 if "category" in reference:
                     self.metadata["reference_category"] = reference["category"]
-                #self._multiline(f"Reference {category}", reference["summary"])
                 self.metadata["reference_url"] = reference["url"]
         if "distribution" in document:
             distribution_info = ""
@@ -155,10 +150,10 @@ class CSAFParser:
         for vulnerability in self.data["vulnerabilities"]:
             vuln_info.initialise()
             vuln_info.set_id(vulnerability["cve"])
-            # if "title" in vulnerability:
-            #     vuln_info.set_value("title", vulnerability["title"])
-            # if "cwe" in vulnerability:
-            #     vuln_info.set_value("cwe",f"{vulnerability['cwe']['id']} - {vulnerability['cwe']['name']}")
+            if "title" in vulnerability:
+                vuln_info.set_value("title", vulnerability["title"])
+            if "cwe" in vulnerability:
+                vuln_info.set_value("cwe",f"{vulnerability['cwe']['id']} - {vulnerability['cwe']['name']}")
             if "notes" in vulnerability:
                 for note in vulnerability["notes"]:
                     vuln_info.set_value("description", note["text"])
@@ -176,42 +171,12 @@ class CSAFParser:
                     vuln_info.set_value("system_name", vulnerability["text"])
             if "references" in vulnerability:
                 for reference in vulnerability["references"]:
-                    category = ""
-                    if "category" in reference:
-                        if reference["category"] == "external":
-                            category = "(External)"
-                    self._multiline(f"Reference {category}", reference["summary"])
-                    vuln_info.set_value(reference["category"], reference["url"])
+                    vuln_info.set_value(reference["category"], [reference.get("summary",""), reference.get("url","")])
             if "release_date" in vulnerability:
                 vuln_info.set_value("release_date", vulnerability["release_date"])
             if "threats" in vulnerability:
                 for threat in vulnerability["threats"]:
                     vuln_info.set_value(threat["category"], threat["details"])
-            # if "scores" in vulnerability:
-            #     for score in vulnerability["scores"]:
-            #         if "cvss_v3" in score:
-            #             self._print(
-            #                 "CVSS3 Score",
-            #                 str(score["cvss_v3"]["baseScore"])
-            #                 + " ("
-            #                 + score["cvss_v3"]["baseSeverity"]
-            #                 + ")",
-            #             )
-            #             vuln_info.set_value("CVSS3 Vector", score["cvss_v3"]["vectorString"])
-            #         elif "cvss_v2" in score:
-            #             self._print(
-            #                 "CVSS2 Score",
-            #                 str(score["cvss_v2"]["baseScore"])
-            #                 + " ("
-            #                 + score["cvss_v2"]["baseSeverity"]
-            #                 + ")",
-            #             )
-            #             vuln_info.set_value("CVSS22 Vector", score["cvss_v2"]["vectorString"])
-            #
-            # if "scores" in vulnerability:
-            #     for score in vulnerability["scores"]:
-            #         if "products" in score:
-            #             self._show_product_id(score["products"])
             if "product_status" in vulnerability:
                 for product_status in vulnerability["product_status"]:
                     vuln_info.set_value("status", product_status)
@@ -219,9 +184,7 @@ class CSAFParser:
                 for remediation in vulnerability["remediations"]:
                     fix = remediation["category"].upper()
                     details = remediation["details"]
-                    self._multiline(fix, details)
-                    if "product_ids" in remediation:
-                        self._show_product_id(remediation["product_ids"])
+                    vuln_info.set_value(fix, [details, remediation.get("product_ids","-")])
             self.vulnerabilities.append(vuln_info.get_vulnerability())
 
     def get_metadata(self):
