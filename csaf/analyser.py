@@ -250,9 +250,12 @@ class CSAFAnalyser:
             if "notes" in d:
                 for note in d["notes"]:
                     if "title" in note:
-                        self._multiline(note["title"], note["text"])
+                        if note["text"] is not None:
+                            self._multiline(note["title"], note["text"])
+                        else:
+                            self._multiline(note["title"], "")
                     else:
-                        self._multiline(note["category"], note["text"])
+                        self._multiline(note["category"], note.get("text",""))
             if "discovery_date" in d:
                 self._print("Discovery Date", d["discovery_date"])
             if "flags" in d:
