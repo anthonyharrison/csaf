@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from csaf.config import CSAFConfig
@@ -43,7 +43,7 @@ class CSAFGenerator:
             self.publisher_name = "ACME Inc."
             self.publisher_url = "https://www.example.com"
         self.core_product = None
-        self.revision=1
+        self.revision=0
         self.sbom = None
 
     def add_product(self, product_name, vendor, release, sbom=""):
@@ -59,7 +59,7 @@ class CSAFGenerator:
             self.sbom = Path(sbom)
 
     def add_vulnerability(
-        self, product_name, release, id, description, status, comment, justification=None, created=None
+        self, product_name, release, id, description, status, comment, justification=None, created=None, remediation=None,action=None,
     ):
         vulnerability = {}
         vulnerability["product"] = product_name
@@ -100,6 +100,10 @@ class CSAFGenerator:
                 vulnerability["justification"] = "component_not_present"
         if created is not None:
             vulnerability["created"] = created
+        if remediation is not None:
+            vulnerability["remediation"] = remediation
+        if action is not None:
+            vulnerability["action"] = action
         self.vulnerabilities_list.append(vulnerability)
 
     def set_title(self, title):
@@ -118,7 +122,7 @@ class CSAFGenerator:
 
     def generate_csaf(self):
 
-        time_now = datetime.now().strftime("%Y-%m-%dT%H-%M-%SZ")
+        time_now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         header = dict()
         header["category"] = "csaf_vex"
         header["csaf_version"] = "2.0"
@@ -195,12 +199,7 @@ class CSAFGenerator:
             tracking_info["status"] = self.metadata.get("tracking_status")
         else:
             tracking_info["status"] = self.metadata.get("status","final")  # Check options
-        if "version" in self.metadata:
-            tracking_info["version"] = self.metadata.get("version")
-        elif "tracking_version" in self.metadata:
-            tracking_info["version"] = self.metadata.get("tracking_version")
-        else:
-            tracking_info["version"] = "1"
+        tracking_info["version"] = str(self.revision+1)
         header["tracking"] = tracking_info
         # Build up a product tree
 
@@ -229,7 +228,7 @@ class CSAFGenerator:
                 product_id += 1
                 if self.sbom is not None:
                     product_helper = dict()
-                    product_helper["sbom_urls"] = Path.as_uri(self.sbom)
+                    product_helper["sbom_urls"] = [Path.as_uri(self.sbom)]
                     product_note["product_identification_helper"]=product_helper
                 version_info["product"] = product_note
                 product_id_list[p + "_" + version_info["name"]] = {
@@ -279,24 +278,34 @@ class CSAFGenerator:
             vulnerability["product_status"] = product_info
             justification = v.get("justification")
             flag_info = dict()
-            if v.get("created") is not None:
-                # Preserve time
-                flag_info["date"] = v.get("created")
-            else:
-                flag_info["date"] = time_now
+            # Flags only if vulnerability justification provided
             if justification is not None:
-                flag_info["label"] = justification
-            flag_info["product_ids"] = [product_id["id"]]
-            vulnerability["flags"] = [flag_info]
+                if v.get("created") is not None:
+                    # Preserve time
+                    flag_info["date"] = v.get("created")
+                else:
+                    flag_info["date"] = time_now
+                if justification is not None:
+                    flag_info["label"] = justification
+                flag_info["product_ids"] = [product_id["id"]]
+                vulnerability["flags"] = [flag_info]
             if comment is not None:
                 threat_info = dict()
                 threat_info["category"] = "impact"
                 threat_info["details"] = comment
-                threat_info["date"] = flag_info["date"]
+                threat_info["date"] = flag_info.get("date",time_now)
                 product_id_info = []
                 product_id_info.append(product_id["id"])
                 threat_info["product_ids"] = product_id_info
                 vulnerability["threats"] = [threat_info]
+            if status == "known_affected":
+                remediation_info = dict()
+                remediation_info["category"] = v.get("remediation","no_idea")
+                remediation_info["details"] = v.get("action","Go and fix it")
+                product_id_info = []
+                product_id_info.append(product_id["id"])
+                remediation_info["product_ids"] = product_id_info
+                vulnerability["remediations"] = [remediation_info]
             vulnerabilities.append(vulnerability)
 
         # Build up CSAF document
@@ -309,7 +318,9 @@ class CSAFGenerator:
             json.dump(self.csaf_document, outfile, indent="   ")
 
     def get_revision(self):
-        return self.revision
+        if self.revision > 0:
+            return self.revision
+        return 1
 
 if __name__ == "__main__":
     csaf_gen = CSAFGenerator()

@@ -182,9 +182,8 @@ class CSAFParser:
                     vuln_info.set_value("status", product_status)
             if "remediations" in vulnerability:
                 for remediation in vulnerability["remediations"]:
-                    fix = remediation["category"].upper()
-                    details = remediation["details"]
-                    vuln_info.set_value(fix, [details, remediation.get("product_ids","-")])
+                    vuln_info.set_remediation(remediation["category"])
+                    vuln_info.set_action(remediation["details"])
             self.vulnerabilities.append(vuln_info.get_vulnerability())
 
     def get_metadata(self):
