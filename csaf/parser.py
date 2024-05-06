@@ -33,7 +33,12 @@ class CSAFParser:
         if len(self.data) == 0:
             return
         # Key attributes from the CSAF header
-        document = self.data["document"]
+
+        document = self.data.get("document")
+        if document is None:
+            # Doesn't look like a CSAF document
+            self.data = []
+            return
         
         self.metadata["version"] = document["csaf_version"]
         self.metadata["title"] = document["title"]
