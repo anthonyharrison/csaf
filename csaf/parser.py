@@ -165,12 +165,15 @@ class CSAFParser:
             if "discovery_date" in vulnerability:
                 vuln_info.set_value("discovery_date", vulnerability["discovery_date"])
             if "flags" in vulnerability:
+                products = []
                 for flag in vulnerability["flags"]:
                     if "label" in flag:
                         vuln_info.set_value("justification", flag["label"])
-                    vuln_info.set_value("created", flag["date"])
+                    if "date" in flag:
+                        vuln_info.set_value("created", flag["date"])
                     for product in flag["product_ids"]:
-                        vuln_info.set_value("Product", product)
+                        products.append(product)
+                    vuln_info.set_value("Product", products)
             if "ids" in vulnerability:
                 for id in vulnerability["ids"]:
                     vuln_info.set_value("system_name", vulnerability["text"])
