@@ -49,7 +49,9 @@ class CSAFParser:
         if "notes" in document:
             notes = []
             for note in document["notes"]:
-                note_ref = {'title': note["title"], 'text' : note['text'], 'category': note['category']}
+                note_ref = {'text' : note['text'], 'category': note['category']}
+                if "title" in note:
+                    note_ref['title']=note["title"]
                 notes.append(note_ref)
             self.metadata["notes"] = notes
         if "publisher" in document:
@@ -173,7 +175,7 @@ class CSAFParser:
                         vuln_info.set_value("created", flag["date"])
                     for product in flag["product_ids"]:
                         products.append(product)
-                    vuln_info.set_value("Product", products)
+                    vuln_info.set_value("product", products)
             if "ids" in vulnerability:
                 for id in vulnerability["ids"]:
                     vuln_info.set_value("system_name", vulnerability["text"])
