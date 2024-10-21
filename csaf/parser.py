@@ -156,7 +156,8 @@ class CSAFParser:
         vuln_info = Vulnerability(validation="csaf")
         for vulnerability in self.data["vulnerabilities"]:
             vuln_info.initialise()
-            vuln_info.set_id(vulnerability["cve"])
+            if "cve" in vulnerability:
+                vuln_info.set_id(vulnerability["cve"])
             if "title" in vulnerability:
                 vuln_info.set_value("title", vulnerability["title"])
             if "cwe" in vulnerability:
