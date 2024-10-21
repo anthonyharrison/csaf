@@ -49,7 +49,9 @@ class CSAFParser:
         if "notes" in document:
             notes = []
             for note in document["notes"]:
-                note_ref = {'title': note["title"], 'text' : note['text'], 'category': note['category']}
+                note_ref = {'text' : note['text'], 'category': note['category']}
+                if "title" in note:
+                    note_ref['title']=note["title"]
                 notes.append(note_ref)
             self.metadata["notes"] = notes
         if "publisher" in document:
@@ -154,7 +156,8 @@ class CSAFParser:
         vuln_info = Vulnerability(validation="csaf")
         for vulnerability in self.data["vulnerabilities"]:
             vuln_info.initialise()
-            vuln_info.set_id(vulnerability["cve"])
+            if "cve" in vulnerability:
+                vuln_info.set_id(vulnerability["cve"])
             if "title" in vulnerability:
                 vuln_info.set_value("title", vulnerability["title"])
             if "cwe" in vulnerability:
@@ -165,12 +168,15 @@ class CSAFParser:
             if "discovery_date" in vulnerability:
                 vuln_info.set_value("discovery_date", vulnerability["discovery_date"])
             if "flags" in vulnerability:
+                products = []
                 for flag in vulnerability["flags"]:
                     if "label" in flag:
                         vuln_info.set_value("justification", flag["label"])
-                    vuln_info.set_value("created", flag["date"])
+                    if "date" in flag:
+                        vuln_info.set_value("created", flag["date"])
                     for product in flag["product_ids"]:
-                        vuln_info.set_value("Product", product)
+                        products.append(product)
+                    vuln_info.set_value("product", products)
             if "ids" in vulnerability:
                 for id in vulnerability["ids"]:
                     vuln_info.set_value("system_name", vulnerability["text"])

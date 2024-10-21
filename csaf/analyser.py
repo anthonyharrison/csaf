@@ -164,7 +164,11 @@ class CSAFAnalyser:
         if "notes" in self.data["document"]:
             for note in self.data["document"]["notes"]:
                 # Notes can be multi-line. Split text up across multiple lines
-                self._multiline(note["title"], note["text"])
+                # category and text are mandatory.
+                if "title" not in note:
+                    self._multiline(note["category"],note["text"])
+                else:
+                    self._multiline(note["title"], note["text"])
         if "publisher" in self.data["document"]:
             publisher_info = (
                 f"{self.data['document']['publisher']['name']} "
